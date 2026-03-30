@@ -20,12 +20,12 @@ struct ClubState {
 	LONG servedCount;
 	LONG timeoutCount;
 };
+
 HANDLE Visitors[20], seeker, hSemaphore;
 ClubState club;
 
 VOID WINAPI threadVisitor() {
 	srand(time(NULL));
-	
 	club.clients[0].arriveTick = GetTickCount64();
 
 	DWORD wait = WaitForSingleObject(hSemaphore, 3000);
@@ -65,5 +65,27 @@ int main()
 	{
 		Visitors[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadVisitor, NULL, NULL, &club.clients[i].threadId);
 	}
+	for (int i = 0; i < 7; i++)
+	{
+		if (!SetThreadPriority(Visitors[i], THREAD_PRIORITY_NORMAL))
+			return GetLastError();
+	}
+	for (int i = 8; i < 15; i++)
+	{
+		if (!SetThreadPriority(Visitors[i], THREAD_PRIORITY_BELOW_NORMAL))
+			return GetLastError();
+	}
+	for (int i = 16; i < 19; i++)
+	{
+		if (!SetThreadPriority(Visitors[i], THREAD_PRIORITY_HIGHEST))
+			return GetLastError();
+	}
+
 	seeker = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadSeeker, NULL, NULL, NULL);
+	if (!SetThreadPriority(seeker, THREAD_PRIORITY_LOWEST))
+		return GetLastError();
+
+	CloseHandle(Visitors);
+	CloseHandle(seeker);
+	CloseHandle(hSemaphore);
 }

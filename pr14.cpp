@@ -24,32 +24,37 @@ struct ClubState {
 HANDLE Visitors[20], seeker, hSemaphore;
 ClubState club;
 int count = 0;
+int counter = 0;
 
 VOID WINAPI threadVisitor() {
 	srand(time(NULL));
+	int i = 0;
 	while (count <= 20)
 	{
-		club.clients[0].arriveTick = GetTickCount64();
-		club.clients[0];
+		ClientRecord client;
+		client.arriveTick = GetTickCount64();
+		
 		DWORD wait = WaitForSingleObject(hSemaphore, 3000);
 		if (wait == WAIT_OBJECT_0) {
-			club.clients[0].startTick = GetTickCount64() - club.clients[0].arriveTick;
+			client.startTick = GetTickCount64() - client.arriveTick;
 
 			int waitTime = rand() % 5;
 			Sleep(waitTime * 1000);
 			ReleaseSemaphore(hSemaphore, 1, NULL);
 
-			club.clients[0].endTick = GetTickCount64() - club.clients[0].endTick;
+			client.endTick = GetTickCount64() - client.endTick;
 
-			club.clients[0].served = TRUE;
-			club.clients[0].timeout = FALSE;
+			client.served = TRUE;
+			client.timeout = FALSE;
 		}
 		else if (wait == WAIT_TIMEOUT) {
-			club.clients[0].served = FALSE;
-			club.clients[0].timeout = TRUE;
+			client.served = FALSE;
+			client.timeout = TRUE;
 
 			club.timeoutCount++;
 		}
+		club.clients[counter] = client;
+		counter++;
 	}
 }
 
@@ -94,6 +99,8 @@ int main()
 		return GetLastError();
 
 	while (count <= 20) {}
+
+	WaitForMultipleObjects(20, Visitors, TRUE, INFINITE);
 	CloseHandle(Visitors);
 	CloseHandle(seeker);
 	CloseHandle(hSemaphore);

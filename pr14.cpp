@@ -21,7 +21,7 @@ struct ClubState {
 	LONG timeoutCount;
 };
 
-HANDLE Visitors[20], seeker, hSemaphore;
+HANDLE Visitors[MAX_CLIENTS], seeker, hSemaphore;
 ClubState club;
 int count = 0;
 int counter = 0;
@@ -31,7 +31,7 @@ VOID WINAPI threadVisitor() {
 	int i = 0;
 	while (count <= 20)
 	{
-		ClientRecord client;
+		ClientRecord client = ClientRecord();
 		client.arriveTick = GetTickCount64();
 		
 		DWORD wait = WaitForSingleObject(hSemaphore, 3000);
@@ -50,8 +50,7 @@ VOID WINAPI threadVisitor() {
 		else if (wait == WAIT_TIMEOUT) {
 			client.served = FALSE;
 			client.timeout = TRUE;
-
-			club.timeoutCount++;
+			ReleaseSemaphore(hSemaphore, 1, NULL);
 		}
 		club.clients[counter] = client;
 		counter++;
@@ -62,17 +61,21 @@ VOID WINAPI threadSeeker() {
 	
 	while (count <= 20)
 	{
+		WaitForSingleObject(hSemaphore, INFINITE);
 		Sleep(500);
-		std::cout << club.currentVisitors << std::endl;
-		std::cout << club.servedCount << std::endl;
-		std::cout << club.timeoutCount << std::endl;
+		std::cout << club.currentVisitors << " - Текущее число занятых мест" << std::endl;
+		std::cout << club.servedCount << " - Кол-во обслуженных посетителей" << std::endl;
+		std::cout << club.timeoutCount << " - Кол-во ушедших по таймауту" << std::endl;
 		count++;
+		ReleaseSemaphore(hSemaphore, 1, NULL);
 	}
 }
 
 int main()
 {
-	hSemaphore = CreateSemaphoreA(NULL, 1, 3, NULL);
+	setlocale(LC_ALL, "ru");
+
+	hSemaphore = CreateSemaphoreA(NULL, 1, 20, NULL);
 
 	for (int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -101,6 +104,8 @@ int main()
 	while (count <= 20) {}
 
 	WaitForMultipleObjects(20, Visitors, TRUE, INFINITE);
+	WaitForSingleObject(seeker, INFINITE);
+	WaitForSingleObject(hSemaphore, INFINITE);
 	CloseHandle(Visitors);
 	CloseHandle(seeker);
 	CloseHandle(hSemaphore);

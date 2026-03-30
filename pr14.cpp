@@ -4,8 +4,6 @@
 #define MAX_CLIENTS 20
 #define CLUB_CAPACITY 4
 
-HANDLE hSemaphore;
-
 struct ClientRecord {
 	DWORD threadId;
 	DWORD arriveTick;
@@ -22,38 +20,50 @@ struct ClubState {
 	LONG servedCount;
 	LONG timeoutCount;
 };
-
+HANDLE Visitors[20], seeker, hSemaphore;
 ClubState club;
 
 VOID WINAPI threadVisitor() {
 	srand(time(NULL));
-	ClientRecord client;
-	client.arriveTick = GetTickCount64();
+	
+	club.clients[0].arriveTick = GetTickCount64();
 
 	DWORD wait = WaitForSingleObject(hSemaphore, 3000);
 	if (wait == WAIT_OBJECT_0) {
-		client.startTick = GetTickCount64();
+		club.clients[0].startTick = GetTickCount64();
+		
 		int waitTime = rand() % 5;
 		Sleep(waitTime * 1000);
 		ReleaseSemaphore(hSemaphore, 1, NULL);
-		client.endTick = GetTickCount64();
-		client.served = TRUE;
-		client.timeout = FALSE;
+		
+		club.clients[0].endTick = GetTickCount64();
+		
+		club.clients[0].served = TRUE;
+		club.clients[0].timeout = FALSE;
 	}
 	else if(wait == WAIT_TIMEOUT){
-		client.served = FALSE;
-		client.timeout = TRUE;
+		club.clients[0].served = FALSE;
+		club.clients[0].timeout = TRUE;
+
+		club.timeoutCount++;
 	}
 }
 
 VOID WINAPI threadSeeker() {
-	Sleep(500);
-	std::cout << club.currentVisitors << std::endl;
-	std::cout << club.servedCount << std::endl;
-	std::cout << club.timeoutCount << std::endl;
+	while (true)
+	{
+		Sleep(500);
+		std::cout << club.currentVisitors << std::endl;
+		std::cout << club.servedCount << std::endl;
+		std::cout << club.timeoutCount << std::endl;
+	}
 }
 
 int main()
 {
-
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		Visitors[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadVisitor, NULL, NULL, &club.clients[i].threadId);
+	}
+	seeker = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadSeeker, NULL, NULL, NULL);
 }

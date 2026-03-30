@@ -29,11 +29,10 @@ int counter = 0;
 VOID WINAPI threadVisitor() {
 	srand(time(NULL));
 	int i = 0;
+	ClientRecord client = ClientRecord();
+	client.arriveTick = GetTickCount64();
 	while (count <= 20)
 	{
-		ClientRecord client = ClientRecord();
-		client.arriveTick = GetTickCount64();
-		
 		DWORD wait = WaitForSingleObject(hSemaphore, 3000);
 		if (wait == WAIT_OBJECT_0) {
 			client.startTick = GetTickCount64() - client.arriveTick;

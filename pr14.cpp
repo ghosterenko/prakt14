@@ -16,7 +16,7 @@ struct ClientRecord {
 struct ClubState {
 	ClientRecord clients[MAX_CLIENTS];
 	LONG currentVisitors;
-	LONG maxVisitors;
+	LONG maxVisitors = CLUB_CAPACITY;
 	LONG servedCount;
 	LONG timeoutCount;
 };
@@ -75,7 +75,7 @@ int main()
 {
 	setlocale(LC_ALL, "ru");
 
-	hSemaphore = CreateSemaphoreA(NULL, 1, 20, NULL);
+	hSemaphore = CreateSemaphoreA(NULL, 1, 4, NULL);
 
 	for (int i = 0; i < MAX_CLIENTS; i++)
 	{

@@ -49,7 +49,7 @@ void ClientThread() {
         club.clients[id].startTick = start;
         club.clients[id].served = TRUE;
 
-        std::cout << "Клиент " << id + 1 << " начал (мест: " << club.currentVisitors << ")" << std::endl;
+        std::cout << "Клиент " << id + 1 << " начал - мест: " << club.currentVisitors << std::endl;
 
         Sleep(time);
 
@@ -77,7 +77,7 @@ void seeker() {
             }
         }
 
-        std::cout << "Статус: занято=" << club.currentVisitors << " обслужено=" << club.servedCount << " ушло=" << club.timeoutCount << std::endl;
+        std::cout << "Статус: занято=" << club.currentVisitors << " обслужено =" << club.servedCount << " ушло =" << club.timeoutCount << std::endl;
     }
 }
 
@@ -125,6 +125,4 @@ int main() {
         CloseHandle(threads[i]);
     CloseHandle(obs);
     CloseHandle(semaphore);
-
-    return 0;
 }

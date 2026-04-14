@@ -23,7 +23,6 @@ ClubState club;
 HANDLE semaphore;
 int idCur = 0;
 HANDLE threads[MAX_CLIENTS];
-bool f = true;
 
 void ClientThread() {
     int id = idCur;
@@ -32,8 +31,8 @@ void ClientThread() {
     DWORD arrive = GetTickCount64();
 
     club.clients[id].arriveTick = arrive;
-    club.clients[id].served = FALSE;
-    club.clients[id].timeout = FALSE;
+    club.clients[id].served = false;
+    club.clients[id].timeout = false;
 
     std::cout << "Клиент " << id + 1 << " пришел" << std::endl;
 
@@ -47,9 +46,9 @@ void ClientThread() {
         }
 
         club.clients[id].startTick = start;
-        club.clients[id].served = TRUE;
+        club.clients[id].served = true;
 
-        std::cout << "Клиент " << id + 1 << " начал - мест: " << club.currentVisitors << std::endl;
+        std::cout << "Клиент " << id + 1 << " начал (мест: " << club.currentVisitors << ")" << std::endl;
 
         Sleep(time);
 
@@ -67,9 +66,10 @@ void ClientThread() {
 }
 
 void seeker() {
-    while (f) {
+    while (true) {
         Sleep(500);
-        
+
+        bool f = true;
         for (int i = 0; i < MAX_CLIENTS; i++) {
             if (WaitForSingleObject(threads[i], 0) == WAIT_TIMEOUT) {
                 f = false;
@@ -77,7 +77,10 @@ void seeker() {
             }
         }
 
-        std::cout << "Статус: занято=" << club.currentVisitors << " обслужено =" << club.servedCount << " ушло =" << club.timeoutCount << std::endl;
+        std::cout << "Статус: занято=" << club.currentVisitors << " обслужено=" << club.servedCount << " ушло=" << club.timeoutCount << std::endl;
+
+        if (f)
+            break;
     }
 }
 
@@ -89,31 +92,28 @@ int main() {
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
         threads[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ClientThread, NULL, 0, NULL);
-        if (i < 8) 
-            SetThreadPriority(threads[i], THREAD_PRIORITY_NORMAL);
-        else if (i < 16)
-            SetThreadPriority(threads[i], THREAD_PRIORITY_BELOW_NORMAL);
-        else
-            SetThreadPriority(threads[i], THREAD_PRIORITY_HIGHEST);
+        if (i < 8) SetThreadPriority(threads[i], THREAD_PRIORITY_NORMAL);
+        else if (i < 16) SetThreadPriority(threads[i], THREAD_PRIORITY_BELOW_NORMAL);
+        else SetThreadPriority(threads[i], THREAD_PRIORITY_HIGHEST);
     }
 
-    HANDLE seeker = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)seeker, NULL, 0, NULL);
-    SetThreadPriority(seeker, THREAD_PRIORITY_LOWEST);
+    HANDLE obs = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)seeker, NULL, 0, NULL);
+    SetThreadPriority(obs, THREAD_PRIORITY_LOWEST);
 
-    WaitForSingleObject(seeker, INFINITE);
+    WaitForSingleObject(obs, INFINITE);
 
     std::cout << "Обслужено: " << club.servedCount << " Ушло: " << club.timeoutCount << " Максимум мест: " << club.maxVisitors << std::endl;
 
-    LONG totalWait = 0;
+    LONG Wait = 0;
     int served = 0;
     for (int i = 0; i < MAX_CLIENTS; i++) {
         if (club.clients[i].served) {
-            totalWait += (club.clients[i].startTick - club.clients[i].arriveTick);
+            Wait += (club.clients[i].startTick - club.clients[i].arriveTick);
             served++;
         }
     }
     if (served > 0) {
-        std::cout << "Среднее ожидание: " << totalWait / served << " мс" << std::endl;
+        std::cout << "Среднее ожидание: " << Wait / served << " мс" << std::endl;
     }
 
     std::cout << "Не обслужены: ";
@@ -122,9 +122,12 @@ int main() {
             std::cout << i + 1 << " ";
         }
     }
+    std::cout << std::endl;
 
-    for (int i = 0; i < MAX_CLIENTS; i++)
+    for (int i = 0; i < MAX_CLIENTS; i++) 
         CloseHandle(threads[i]);
-    CloseHandle(seeker);
+    CloseHandle(obs);
     CloseHandle(semaphore);
+
+    return 0;
 }

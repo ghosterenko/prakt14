@@ -97,10 +97,10 @@ int main() {
             SetThreadPriority(threads[i], THREAD_PRIORITY_HIGHEST);
     }
 
-    HANDLE obs = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)seeker, NULL, 0, NULL);
-    SetThreadPriority(obs, THREAD_PRIORITY_LOWEST);
+    HANDLE seeker = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)seeker, NULL, 0, NULL);
+    SetThreadPriority(seeker, THREAD_PRIORITY_LOWEST);
 
-    WaitForSingleObject(obs, INFINITE);
+    WaitForSingleObject(seeker, INFINITE);
 
     std::cout << "Обслужено: " << club.servedCount << " Ушло: " << club.timeoutCount << " Максимум мест: " << club.maxVisitors << std::endl;
 
@@ -125,6 +125,6 @@ int main() {
 
     for (int i = 0; i < MAX_CLIENTS; i++)
         CloseHandle(threads[i]);
-    CloseHandle(obs);
+    CloseHandle(seeker);
     CloseHandle(semaphore);
 }

@@ -23,6 +23,7 @@ ClubState club;
 HANDLE semaphore;
 int idCur = 0;
 HANDLE threads[MAX_CLIENTS];
+bool f = true;
 
 void ClientThread() {
     int id = idCur;
@@ -66,10 +67,9 @@ void ClientThread() {
 }
 
 void seeker() {
-    while (true) {
+    while (f) {
         Sleep(500);
-
-        bool f = true;
+        
         for (int i = 0; i < MAX_CLIENTS; i++) {
             if (WaitForSingleObject(threads[i], 0) == WAIT_TIMEOUT) {
                 f = false;
@@ -78,9 +78,6 @@ void seeker() {
         }
 
         std::cout << "Статус: занято=" << club.currentVisitors << " обслужено=" << club.servedCount << " ушло=" << club.timeoutCount << std::endl;
-
-        if (f)
-            break;
     }
 }
 
@@ -102,7 +99,7 @@ int main() {
 
     WaitForSingleObject(obs, INFINITE);
 
-    std::cout << "\nОбслужено: " << club.servedCount << " Ушло: " << club.timeoutCount << " Максимум мест: " << club.maxVisitors << std::endl;
+    std::cout << "Обслужено: " << club.servedCount << " Ушло: " << club.timeoutCount << " Максимум мест: " << club.maxVisitors << std::endl;
 
     LONG totalWait = 0;
     int served = 0;
@@ -124,7 +121,7 @@ int main() {
     }
     std::cout << std::endl;
 
-    for (int i = 0; i < MAX_CLIENTS; i++) 
+    for (int i = 0; i < MAX_CLIENTS; i++)
         CloseHandle(threads[i]);
     CloseHandle(obs);
     CloseHandle(semaphore);

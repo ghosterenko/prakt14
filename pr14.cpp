@@ -39,7 +39,7 @@ void ClientThread() {
 
     if (WaitForSingleObject(semaphore, 3000) == WAIT_OBJECT_0) {
         DWORD start = GetTickCount64();
-        int work = 2000 + rand() % 3001;
+        int time = 2000 + rand() % 3001;
 
         club.currentVisitors++;
         if (club.currentVisitors > club.maxVisitors) {
@@ -51,7 +51,7 @@ void ClientThread() {
 
         std::cout << "Клиент " << id + 1 << " начал (мест: " << club.currentVisitors << ")" << std::endl;
 
-        Sleep(work);
+        Sleep(time);
 
         club.currentVisitors--;
         club.servedCount++;
